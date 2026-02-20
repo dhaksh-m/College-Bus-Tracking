@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>College Bus Live Tracking (OpenStreetMap)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet (OpenStreetMap) -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #0f172a;
+      color: white;
+    }
+
+    header {
+      padding: 15px;
+      text-align: center;
+      background: #1e293b;
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+
+    #info {
+      display: flex;
+      justify-content: space-around;
+      padding: 10px;
+      background: #020617;
+      flex-wrap: wrap;
+    }
+
+    .box {
+      text-align: center;
+      margin: 5px;
+    }
+
+    .label {
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+
+    .value {
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    #map {
+      width: 100%;
+      height: 80vh;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>🚌 College Bus Live Tracking (OpenStreetMap)</header>
+
+  <div id="info">
+    <div class="box">
+      <div class="label">Bus ID</div>
+      <div class="value">BUS001</div>
+    </div>
+    <div class="box">
+      <div class="label">Latitude</div>
+      <div class="value" id="lat">--</div>
+    </div>
+    <div class="box">
+      <div class="label">Longitude</div>
+      <div class="value" id="lng">--</div>
+    </div>
+    <div class="box">
+      <div class="label">Speed</div>
+      <div class="value" id="speed">-- km/h</div>
+    </div>
+  </div>
+
+  <div id="map"></div>
+
+  <script>
+    /* ========== FIREBASE CONFIG ========== */
+    const firebaseConfig = {
+      apiKey: "AIzaSyD8B0-xOgfyRO5mkhWrqTnEOWzhm2snUbM",
+      authDomain: "college-bus-tracker-d66e9.firebaseapp.com",
+      databaseURL: "https://college-bus-tracker-d66e9-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "college-bus-tracker-d66e9",
+      storageBucket: "college-bus-tracker-d66e9.appspot.com",
+      messagingSenderId: "1028272518404",
+      appId: "1:1028272518404:web:f652f51c8c5e5514004c51"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    /* ========== LEAFLET MAP ========== */
+    let map;
+    let marker;
+
+    function initMap() {
+      const startPos = [17.3850, 78.4867]; // Default: Hyderabad
+
+      map = L.map("map").setView(startPos, 15);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors"
+      }).addTo(map);
+
+      marker = L.marker(startPos).addTo(map)
+        .bindPopup("College Bus (BUS001)")
+        .openPopup();
+
+      listenToFirebase();
+    }
+
+    /* ========== FIREBASE LISTENER ========== */
+    function listenToFirebase() {
+      const ref = database.ref("/bus_tracking/BUS001/location");
+
+      ref.on("value", (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        const lat = data.latitude;
+        const lng = data.longitude;
+        const speed = data.speed_kmph || 0;
+
+        document.getElementById("lat").innerText = lat.toFixed(6);
+        document.getElementById("lng").innerText = lng.toFixed(6);
+        document.getElementById("speed").innerText = speed + " km/h";
+
+        const newPos = [lat, lng];
+        marker.setLatLng(newPos);
+        map.setView(newPos);
+      });
+    }
+
+    // Initialize map on page load
+    window.onload = initMap;
+  </script>
+
+</body>
+</html>
