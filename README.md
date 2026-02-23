@@ -12,3 +12,4 @@ Real-time college bus tracking using ESP32, GPS, Firebase, and Google Maps.
 - GPS (NEO-6M)
 - Firebase
 - HTML, CSS, JavaScript
+
